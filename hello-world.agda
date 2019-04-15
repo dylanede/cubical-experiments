@@ -11,60 +11,63 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Nat renaming (_+_ to _+ℕ_; _*_ to _*ℕ_)
 open import Cubical.Data.Empty
 
-instance
-  inst-refl :  ∀ {ℓ} {A : Set ℓ} {a : A} → a ≡ a
-  inst-refl = refl
+private
+  variable
+    ℓ ℓ' : Level
 
-record Op< {ℓ} (S : Set ℓ) : Set ℓ where
+const₂ : {A B : Set ℓ} {C : Set ℓ'} → C → A → B → C
+const₂ c _ _ = c
+
+record Op< (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infix 5 _<_
   field
-    _<_ : S
+    _<_ : (a : A) → (b : B) → C a b
 open Op< ⦃ ... ⦄ public
 
-record Op> {ℓ} (S : Set ℓ) : Set ℓ where
+record Op> (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infix 5 _>_
   field
-    _>_ : S
+    _>_ : (a : A) → (b : B) → C a b
 open Op> ⦃ ... ⦄ public
 
-record Op≥ {ℓ} (S : Set ℓ) : Set ℓ where
+record Op≥ (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infix 5 _≥_
   field
-    _≥_ : S
+    _≥_ : (a : A) → (b : B) → C a b
 open Op≥ ⦃ ... ⦄ public
 
-record Op≤ {ℓ} (S : Set ℓ) : Set ℓ where
+record Op≤ (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infix 5 _≤_
   field
-    _≤_ : S
+    _≤_ : (a : A) → (b : B) → C a b
 open Op≤ ⦃ ... ⦄ public
 
-record Op== {ℓ} (S : Set ℓ) : Set ℓ where
+record Op== (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infix 5 _==_
   field
-    _==_ : S
+    _==_ : (a : A) → (b : B) → C a b
 open Op== ⦃ ... ⦄ public
 
-record Op+ {ℓ} (S : Set ℓ) : Set ℓ where
+record Op+ (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infixl 7 _+_
   field
-    _+_ : S
+    _+_ : (a : A) → (b : B) → C a b
 open Op+ ⦃ ... ⦄ public
 
-record Op- {ℓ} (S : Set ℓ) : Set ℓ where
+record Op- (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infixl 7 _-_
   field
-    _-_ : S
+    _-_ : (a : A) → (b : B) → C a b
 open Op- ⦃ ... ⦄ public
 
-record Op* {ℓ} (S : Set ℓ) : Set ℓ where
+record Op* (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infixl 8 _*_
   field
-    _*_ : S
+    _*_ : (a : A) → (b : B) → C a b
 open Op* ⦃ ... ⦄ public
 
 instance
-  ℕ< : Op< (ℕ → ℕ → Bool)
+  ℕ< : Op< ℕ ℕ (const₂ Bool)
   _<_ ⦃ ℕ< ⦄ n m = n less-than m where
     _less-than_ : ℕ → ℕ → Bool
     zero less-than zero = false
@@ -73,7 +76,7 @@ instance
     suc a less-than suc b = a less-than b
 
 instance
- ℕ> : Op> (ℕ → ℕ → Bool)
+ ℕ> : Op> ℕ ℕ (const₂ Bool)
  _>_ ⦃ ℕ> ⦄ n m = n greater-than m where
    _greater-than_ : ℕ → ℕ → Bool
    zero greater-than zero = false
@@ -82,15 +85,15 @@ instance
    suc a greater-than suc b = a greater-than b
 
 instance
-  ℕ≥ : Op≥ (ℕ → ℕ → Bool)
+  ℕ≥ : Op≥ ℕ ℕ (const₂ Bool)
   _≥_ ⦃ ℕ≥ ⦄ a b = not (a < b)
 
 instance
-  ℕ≤ : Op≤ (ℕ → ℕ → Bool)
+  ℕ≤ : Op≤ ℕ ℕ (const₂ Bool)
   _≤_ ⦃ ℕ≤ ⦄ a b = not (a > b)
 
 instance
-  ℕ== : Op== (ℕ → ℕ → Bool)
+  ℕ== : Op== ℕ ℕ (const₂ Bool)
   _==_ ⦃ ℕ== ⦄ a b = a eq b where
     _eq_ : ℕ → ℕ → Bool
     zero eq zero = true
@@ -105,26 +108,28 @@ a>b≡¬a≤b : {a b : ℕ} → a > b ≡ not (a ≤ b)
 a>b≡¬a≤b {a} {b} = sym (notnot (a > b))
 
 instance
-  ℕ+ : Op+ (ℕ → ℕ → ℕ)
+  ℕ+ : Op+ ℕ ℕ (const₂ ℕ)
   _+_ ⦃ ℕ+ ⦄ a b = a +ℕ b
 
+
 instance
-  ℕ- : Op- ((a : ℕ) → (b : ℕ) → ⦃ a≥b : a ≥ b ≡ true ⦄ → ℕ)
+  ℕ- : Op- ℕ ℕ (λ a b → ⦃ _ : a ≥ b ≡ true ⦄ → ℕ)
   _-_ ⦃ ℕ- ⦄ a b = a minus b where
-    _minus_ : (a : ℕ) → (b : ℕ) → ⦃ a≥b : a ≥ b ≡ true ⦄ → ℕ
+    _minus_ : (a : ℕ) → (b : ℕ) → ⦃ _ : a ≥ b ≡ true ⦄ → ℕ
     n minus zero = n
     _minus_ zero (suc b) ⦃ a≥b ⦄ = ⊥-elim (false≢true a≥b)
     (suc a) minus (suc b) = a minus b
 
+
 instance
-  ℕ* : Op* (ℕ → ℕ → ℕ)
+  ℕ* : Op* ℕ ℕ (const₂ ℕ)
   _*_ ⦃ ℕ* ⦄ a b = a *ℕ b
 
 
 --ℤ---------------
 
 instance
-  ℤ< : Op< (ℤ → ℤ → Bool)
+  ℤ< : Op< ℤ ℤ (const₂ Bool)
   _<_ ⦃ ℤ< ⦄ n m = n less-than m where
     _less-than_ : ℤ → ℤ → Bool
     pos n less-than pos m = n < m
@@ -144,7 +149,7 @@ instance
     posneg _ less-than posneg _ = false
 
 instance
-  ℤ> : Op> (ℤ → ℤ → Bool)
+  ℤ> : Op> ℤ ℤ (const₂ Bool)
   _>_ ⦃ ℤ> ⦄ n m = n greater-than m where
     _greater-than_ : ℤ → ℤ → Bool
     pos n greater-than pos m = n > m
@@ -164,15 +169,15 @@ instance
     posneg _ greater-than posneg _ = false
 
 instance
-  ℤ≥ : Op≥ (ℤ → ℤ → Bool)
+  ℤ≥ : Op≥ ℤ ℤ (const₂ Bool)
   _≥_ ⦃ ℤ≥ ⦄ a b = not (a < b)
 
 instance
-  ℤ≤ : Op≤ (ℤ → ℤ → Bool)
+  ℤ≤ : Op≤ ℤ ℤ (const₂ Bool)
   _≤_ ⦃ ℤ≤ ⦄ a b = not (a > b)
 
 instance
-  ℤ== : Op== (ℤ → ℤ → Bool)
+  ℤ== : Op== ℤ ℤ (const₂ Bool)
   _==_ ⦃ ℤ== ⦄ a b = a eq b where
     _eq_ : ℤ → ℤ → Bool
     pos n eq pos m = n == m
@@ -194,26 +199,26 @@ instance
     posneg _ eq posneg _ = true
 
 instance
-  ℤ+ : Op+ (ℤ → ℤ → ℤ)
+  ℤ+ : Op+ ℤ ℤ (const₂ ℤ)
   _+_ ⦃ ℤ+ ⦄ a b = a +ℤ b
 
 instance
-  ℤ- : Op- (ℤ → ℤ → ℤ)
+  ℤ- : Op- ℤ ℤ (const₂ ℤ)
   _-_ ⦃ ℤ- ⦄ a (pos n) = a + (neg n)
   _-_ ⦃ ℤ- ⦄ a (neg n) = a + (pos n)
   _-_ ⦃ ℤ- ⦄ a (posneg _) = a
 
 instance
-  ℤ* : Op* (ℤ → ℤ → ℤ)
+  ℤ* : Op* ℤ ℤ (const₂ ℤ)
   _*_ ⦃ ℤ* ⦄ a b = a *ℤ b
 
 --ℚ---------------
 
 instance
-  ℚ< : Op< (ℚ → ℚ → Bool)
+  ℚ< : Op< ℚ ℚ (const₂ Bool)
   _<_ ⦃ ℚ< ⦄ n m = n less-than m where
     _less-than_ : ℚ → ℚ → Bool
-    con u a _ less-than con v b _ = _<_ ⦃ ℤ< ⦄ (u * b) (v * a) -- why does `(u * b) < (v * a)` not work?
+    con u a _ less-than con v b _ = (u * b) < (v * a)
     q@(con u a x) less-than path v b w c y i = {!!} -- Something like `(u * b * c) < ((y i) * a)` ?
     path u a v b x i less-than r = {!!}
     q@(con _ _ _) less-than trunc r r₁ x y i i₁ = BoolIsSet (q less-than r) (q less-than r₁) (cong (q less-than_) x) (cong (q less-than_) y) i i₁
@@ -235,12 +240,12 @@ private
   nonzero-prod (neg (suc _)) (neg zero) _ r≢0 _ = r≢0 (sym posneg)
   nonzero-prod q@(pos (suc _)) (posneg i) _ r≢0 _ = r≢0 λ j → posneg (i ∧ ~ j)
   nonzero-prod q@(neg (suc _)) (posneg i) _ r≢0 _ = r≢0 λ j → posneg (i ∧ ~ j)
-  nonzero-prod (posneg i) _ q≢0 _ _ = q≢0 λ j → posneg (i ∧ ~ j) 
+  nonzero-prod (posneg i) _ q≢0 _ _ = q≢0 λ j → posneg (i ∧ ~ j)
 
   --+-distrib
   
 instance
-  ℚ+ : Op+ (ℚ → ℚ → ℚ)
+  ℚ+ : Op+ ℚ ℚ (const₂ ℚ)
   _+_ ⦃ ℚ+ ⦄ q r = q plus r where
     _plus_ : ℚ → ℚ → ℚ
     con u a x plus con v b y = con (u * b + v * a) (a * b) (nonzero-prod a b x y)
