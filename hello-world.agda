@@ -5,7 +5,7 @@ module hello-world where
 open import IO
 open import Cubical.Core.Everything
 open import Cubical.Relation.Nullary
-open import Cubical.HITs.HitInt renaming (abs to absℚ ; Sign to Sign'; sign to sign')
+open import Cubical.HITs.HitInt renaming (abs to absℤ ; Sign to Sign'; sign to sign')
 open import Cubical.HITs.Rational
 --open import Cubical.Foundations.Logic
 open import Cubical.Data.Bool
@@ -216,32 +216,42 @@ instance
   _<_ ⦃ ℚ< ⦄ n m = n less-than m where
     _less-than_ : ℚ → ℚ → Bool
     con u a _ less-than con v b _ = _<_ ⦃ ℤ< ⦄ (u * b) (v * a)
-    con u a x less-than path u₁ a₁ v b x₁ i = {!!}
-    con u a x less-than trunc r r₁ x₁ y i i₁ = {!!}
-    path u a v b x i less-than con u₁ a₁ x₁ = {!!}
-    path u a v b x i less-than path u₁ a₁ v₁ b₁ x₁ i₁ = {!!}
-    path u a v b x i less-than trunc r r₁ x₁ y i₁ i₂ = {!!}
-    trunc q q₁ x y i i₁ less-than con u a x₁ = {!!}
-    trunc q q₁ x y i i₁ less-than path u a v b x₁ i₂ = {!!}
-    trunc q q₁ x y i i₁ less-than trunc r r₁ x₁ y₁ i₂ i₃ = {!!}
+    q@(con _ _ _) less-than path u₁ a₁ v b x₁ i = {!!}
+    path u a v b x i less-than r = {!!}
+    q@(con _ _ _) less-than trunc r r₁ x y i i₁ = BoolIsSet (q less-than r) (q less-than r₁) (cong (q less-than_) x) (cong (q less-than_) y) i i₁
+    trunc q q₁ x y i i₁ less-than r = BoolIsSet (q less-than r) (q₁ less-than r) (cong (_less-than r) x) (cong (_less-than r) y) i i₁
 
+private
+  -- use of this lemma could be made automatic by changing `path` to take instance arguments instead of implicit arguments.
+  -- `nonzero-prod` would then be an instance of `¬ (q * r ≡ pos 0)`
+  nonzero-prod : (q r : ℤ) → ¬ (q ≡ pos zero) → ¬ (r ≡ pos zero) → ¬ (q * r ≡ pos 0)
+  nonzero-prod (pos (suc n)) (pos (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
+  nonzero-prod (pos (suc n)) (neg (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
+  nonzero-prod (neg (suc n)) (pos (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
+  nonzero-prod (neg (suc n)) (neg (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
+  nonzero-prod (pos zero) _ q≢0 _ _ = q≢0 refl
+  nonzero-prod (neg zero) _ q≢0 _ _ = q≢0 (sym posneg)
+  nonzero-prod (pos (suc _)) (pos zero) _ r≢0 _ = r≢0 refl
+  nonzero-prod (pos (suc _)) (neg zero) _ r≢0 _ = r≢0 (sym posneg)
+  nonzero-prod (neg (suc _)) (pos zero) _ r≢0 _ = r≢0 refl
+  nonzero-prod (neg (suc _)) (neg zero) _ r≢0 _ = r≢0 (sym posneg)
+  nonzero-prod q@(pos (suc _)) (posneg i) _ r≢0 _ = r≢0 {!!}
+  nonzero-prod q@(neg (suc _)) (posneg i) _ r≢0 _ = r≢0 {!!}
+  nonzero-prod (posneg i) _ q≢0 _ _ = q≢0 {!!}
+
+  +-distrib
+  
 instance
   ℚ+ : Op+ (ℚ → ℚ → ℚ)
   _+_ ⦃ ℚ+ ⦄ q r = q plus r where
     _plus_ : ℚ → ℚ → ℚ
-    con u a x plus con v b y = con (u * b + v * a) (a * b) (p a x b y) where
-      p : (a : ℤ) → ¬ (a ≡ pos zero) → (b : ℤ) → ¬ (b ≡ pos zero) → ¬ (a * b ≡ pos zero)
-      p (pos zero) a≢0 _ _ = ⊥-elim (a≢0 refl)
-      p (pos (suc n)) a≢0 (pos zero) b≢0 = ⊥-elim (b≢0 refl)
-      p (pos (suc n)) a≢0 (pos (suc m)) b≢0 ab≢0 = {!!}
-      p (pos (suc n)) a≢0 (neg m) b≢0 = {!!}
-      p (pos (suc n)) a≢0 (posneg i) b≢0 = {!!}
-      p (neg n) a≢0 b b≢0 = {!!}
-      p (posneg i) a≢0 b b≢0 = {!!}
-    con u a x plus path u₁ a₁ v b x₁ i = {!!}
-    con u a x plus trunc r r₁ x₁ y i i₁ = {!!}
-    path u a v b x i plus r = {!!}
-    trunc q q₁ x y i i₁ plus r = {!!}
+    con u a x plus con v b y = con (u * b + v * a) (a * b) (nonzero-prod a b x y)
+    con u a x plus path v b w c {p₁} {p₂} y i = path (u * b + v * a) (a * b) (u * c + w * a) (a * c) {p = nonzero-prod a b x p₁} {q = nonzero-prod a c x p₂} {!!} i
+    path u a v b {p₁} {p₂} x i plus con w c y = path (u * c + w * a) (a * c) (v * c + w * b) (b * c) {p = nonzero-prod a c p₁ y} {q = nonzero-prod b c p₂ y} {!!} i
+    path u a v b x i plus path u₁ a₁ v₁ b₁ x₁ i₁ = {!!}
+    q@(path _ _ _ _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
+    q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
+    trunc q q₁ x y i i₁ plus r = trunc (q plus r) (q₁ plus r) (cong (_plus r) x) (cong (_plus r) y) i i₁
 main = run (putStrLn "Hello, World!")
 
 -- infix 10 _~⟨_⟩_
