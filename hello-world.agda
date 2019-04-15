@@ -150,23 +150,7 @@ instance
 
 instance
   ℤ> : Op> ℤ ℤ (const₂ Bool)
-  _>_ ⦃ ℤ> ⦄ n m = n greater-than m where
-    _greater-than_ : ℤ → ℤ → Bool
-    pos n greater-than pos m = n > m
-    neg n greater-than neg m = n < m
-    pos zero greater-than neg zero = false
-    pos zero greater-than neg (suc _) = true
-    pos (suc _) greater-than neg _ = true
-    neg _ greater-than pos _ = false
-    pos zero greater-than posneg _ = false
-    pos (suc _) greater-than posneg _ = true
-    neg zero greater-than posneg _ = false
-    neg (suc _) greater-than posneg _ = false
-    posneg _ greater-than pos zero = false
-    posneg _ greater-than pos (suc _) = false
-    posneg _ greater-than neg zero = false
-    posneg _ greater-than neg (suc _) = true
-    posneg _ greater-than posneg _ = false
+  _>_ ⦃ ℤ> ⦄ n m = m < n
 
 instance
   ℤ≥ : Op≥ ℤ ℤ (const₂ Bool)
@@ -218,11 +202,15 @@ instance
   ℚ< : Op< ℚ ℚ (const₂ Bool)
   _<_ ⦃ ℚ< ⦄ n m = n less-than m where
     _less-than_ : ℚ → ℚ → Bool
-    con u a _ less-than con v b _ = (u * b) < (v * a)
-    q@(con u a x) less-than path v b w c y i = {!!} -- Something like `(u * b * c) < ((y i) * a)` ?
+    con u a _ less-than con v b _ = u * b < v * a
+    q@(con u a x) less-than path v b w c y i = {!!} -- Something like `u * b * c < (y i) * a` ?
     path u a v b x i less-than r = {!!}
     q@(con _ _ _) less-than trunc r r₁ x y i i₁ = BoolIsSet (q less-than r) (q less-than r₁) (cong (q less-than_) x) (cong (q less-than_) y) i i₁
     trunc q q₁ x y i i₁ less-than r = BoolIsSet (q less-than r) (q₁ less-than r) (cong (_less-than r) x) (cong (_less-than r) y) i i₁
+
+instance
+  ℚ> : Op> ℚ ℚ (const₂ Bool)
+  _>_ ⦃ ℚ> ⦄ n m = m < n
 
 private
   -- use of this lemma could be made automatic by changing `path` to take instance arguments instead of implicit arguments.
@@ -255,9 +243,8 @@ instance
     q@(path _ _ _ _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     trunc q q₁ x y i i₁ plus r = trunc (q plus r) (q₁ plus r) (cong (_plus r) x) (cong (_plus r) y) i i₁
-main = run (putStrLn "Hello, World!")
 
--- infix 10 _~⟨_⟩_
+infix 10 _~⟨_⟩_
 
 -- data Sign : Set where
 --   pos neg zero : Sign
@@ -342,16 +329,16 @@ main = run (putStrLn "Hello, World!")
 --   _+_ : ℚ₊ → ℚ₊ → ℚ₊
 --   q + r = {!!}
 
--- data ℝ : Set
--- data _~⟨_⟩_ : ℝ → ℚ₊ → ℝ → Set
+data ℝ : Set
+data _~⟨_⟩_ : ℝ → (tol : ℚ) → ⦃ _ : tol > int (pos 0) ≡ true ⦄ → ℝ → Set
 
--- data ℝ where
---   rat : (q : ℚ) → ℝ
---   lim : (x : ℚ₊ → ℝ) → ((δ ε : ℚ₊) → x δ ~⟨ δ ℚ₊.+ ε ⟩ x ε) → ℝ
---   eq : (u v : ℝ) → ((ε : ℚ₊) → u ~⟨ ε ⟩ v) → u ≡ v
+data ℝ where
+  rat : (q : ℚ) → ℝ
+  lim : (x : ℚ → ℝ) → ((δ ε : ℚ) ⦃ _ : δ + ε > int (pos 0) ≡ true ⦄ → x δ ~⟨ δ + ε ⟩ x ε) → ℝ
+  eq : (u v : ℝ) → ((ε : ℚ) ⦃ _ : ε > int (pos 0) ≡ true ⦄ → u ~⟨ ε ⟩ v) → u ≡ v
 
--- data _~⟨_⟩_ where
---   ~-rat-rat : ∀ {q r ε} → abs (q ⟨ℚ⟩.- r) ℚ₊.< ε → rat q ~⟨ ε ⟩ rat r
+data _~⟨_⟩_ where
+--   ~-rat-rat : ∀ {q r ε} → abs (q - r) < ε → rat q ~⟨ ε ⟩ rat r
 --   ~-rat-lim : ∀ {q y l δ ε} ⦃ _ : ε ℚ₊.> δ ⦄ → rat q ~⟨ ε ℚ₊.- δ ⟩ y δ → rat q ~⟨ ε ⟩ lim y l
 --   ~-lim-rat : ∀ {x l r δ ε} ⦃ _ : ε ℚ₊.> δ ⦄ → x δ ~⟨ ε ℚ₊.- δ ⟩ rat r → lim x l ~⟨ ε ⟩ rat r
 --   ~-lim-lim : ∀ {x lₓ y ly ε δ η} ⦃ _ : ε ℚ₊.> δ ⦄ ⦃ _ : (ε ℚ₊.- δ) ℚ₊.> η ⦄ → x δ ~⟨ (ε ℚ₊.- δ) ℚ₊.- η ⟩ y η → lim x lₓ ~⟨ ε ⟩ lim y ly
