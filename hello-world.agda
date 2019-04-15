@@ -3,14 +3,12 @@
 module hello-world where
 
 open import IO
-open import Cubical.Core.Everything
+open import Cubical.Foundations.Prelude
 open import Cubical.Relation.Nullary
 open import Cubical.HITs.HitInt renaming (abs to absℤ ; Sign to Sign'; sign to sign')
 open import Cubical.HITs.Rational
---open import Cubical.Foundations.Logic
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat renaming (_+_ to _+ℕ_; _*_ to _*ℕ_)
---open import Cubical.Foundations.Function
 open import Cubical.Data.Empty
 
 instance
@@ -215,8 +213,8 @@ instance
   ℚ< : Op< (ℚ → ℚ → Bool)
   _<_ ⦃ ℚ< ⦄ n m = n less-than m where
     _less-than_ : ℚ → ℚ → Bool
-    con u a _ less-than con v b _ = _<_ ⦃ ℤ< ⦄ (u * b) (v * a)
-    q@(con _ _ _) less-than path u₁ a₁ v b x₁ i = {!!}
+    con u a _ less-than con v b _ = _<_ ⦃ ℤ< ⦄ (u * b) (v * a) -- why does `(u * b) < (v * a)` not work?
+    q@(con u a x) less-than path v b w c y i = {!!} -- Something like `(u * b * c) < ((y i) * a)` ?
     path u a v b x i less-than r = {!!}
     q@(con _ _ _) less-than trunc r r₁ x y i i₁ = BoolIsSet (q less-than r) (q less-than r₁) (cong (q less-than_) x) (cong (q less-than_) y) i i₁
     trunc q q₁ x y i i₁ less-than r = BoolIsSet (q less-than r) (q₁ less-than r) (cong (_less-than r) x) (cong (_less-than r) y) i i₁
@@ -235,11 +233,11 @@ private
   nonzero-prod (pos (suc _)) (neg zero) _ r≢0 _ = r≢0 (sym posneg)
   nonzero-prod (neg (suc _)) (pos zero) _ r≢0 _ = r≢0 refl
   nonzero-prod (neg (suc _)) (neg zero) _ r≢0 _ = r≢0 (sym posneg)
-  nonzero-prod q@(pos (suc _)) (posneg i) _ r≢0 _ = r≢0 {!!}
-  nonzero-prod q@(neg (suc _)) (posneg i) _ r≢0 _ = r≢0 {!!}
-  nonzero-prod (posneg i) _ q≢0 _ _ = q≢0 {!!}
+  nonzero-prod q@(pos (suc _)) (posneg i) _ r≢0 _ = r≢0 λ j → posneg (i ∧ ~ j)
+  nonzero-prod q@(neg (suc _)) (posneg i) _ r≢0 _ = r≢0 λ j → posneg (i ∧ ~ j)
+  nonzero-prod (posneg i) _ q≢0 _ _ = q≢0 λ j → posneg (i ∧ ~ j) 
 
-  +-distrib
+  --+-distrib
   
 instance
   ℚ+ : Op+ (ℚ → ℚ → ℚ)
