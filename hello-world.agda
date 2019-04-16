@@ -11,6 +11,7 @@ open import Cubical.Data.Nat renaming (_+_ to _+ℕ_; _*_ to _*ℕ_)
 open import Cubical.Data.Empty
 open import Cubical.Data.Unit
 open import Agda.Primitive
+open import Function
 
 private
   variable
@@ -107,6 +108,11 @@ record Op* (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') w
   field
     _*_ : (a : A) → (b : B) → C a b
 open Op* ⦃ ... ⦄ public
+
+record OpUnary- (A : Set ℓ) (B : A → Set ℓ') : Set (ℓ-max ℓ ℓ') where
+  field
+    -_ : (a : A) → B a
+open OpUnary- ⦃ ... ⦄ public
 
 instance
   ℕ< : Op< ℕ ℕ (const₂ Bool)
@@ -238,6 +244,12 @@ instance
   ℤ* : Op* ℤ ℤ (const₂ ℤ)
   _*_ ⦃ ℤ* ⦄ a b = a *ℤ b
 
+instance
+  ℤunary- : OpUnary- ℤ (const ℤ)
+  -_ ⦃ ℤunary- ⦄ (pos n) = neg n
+  -_ ⦃ ℤunary- ⦄ (neg n) = pos n
+  -_ ⦃ ℤunary- ⦄ (posneg i) = (sym posneg) i
+
 --ℚ---------------
 
 instance
@@ -286,19 +298,91 @@ instance
     q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     trunc q q₁ x y i i₁ plus r = trunc (q plus r) (q₁ plus r) (cong (_plus r) x) (cong (_plus r) y) i i₁
 
+private
+  neg-assoc* : {a b : ℤ} → - (a * b) ≡ (- a) * b
+  neg-assoc* {pos zero} {pos n₁} = sym posneg
+  neg-assoc* {pos (suc n)} {pos n₁} = refl
+  neg-assoc* {pos zero} {neg zero} = sym posneg
+  neg-assoc* {pos zero} {neg (suc n₁)} = posneg
+  neg-assoc* {pos (suc n)} {neg zero} = refl
+  neg-assoc* {pos (suc n)} {neg (suc n₁)} = refl
+  neg-assoc* {pos zero} {posneg i} = sym posneg
+  neg-assoc* {pos (suc n)} {posneg i} = refl
+  neg-assoc* {neg zero} {pos n₁} = sym posneg
+  neg-assoc* {neg (suc n)} {pos n₁} = refl
+  neg-assoc* {neg zero} {neg zero} = sym posneg
+  neg-assoc* {neg (suc n)} {neg zero} = refl
+  neg-assoc* {neg zero} {neg (suc n₁)} = posneg
+  neg-assoc* {neg (suc n)} {neg (suc n₁)} = refl
+  neg-assoc* {neg zero} {posneg i} = sym posneg
+  neg-assoc* {neg (suc n)} {posneg i} = refl
+  neg-assoc* {posneg i} {pos n} = sym posneg
+  neg-assoc* {posneg i} {neg zero} = sym posneg
+  neg-assoc* {posneg i} {neg (suc n)} = posneg
+  neg-assoc* {posneg i} {posneg i₁} = sym posneg
+
+instance
+  ℚunary- : OpUnary- ℚ (const ℚ)
+  -_ ⦃ ℚunary- ⦄ q = negative q where
+    negative : ℚ → ℚ
+    negative (con u a x) = con (- u) a x
+    negative (path u a v b {p} {q} x i) = path (- u) a (- v) b {p = p} {q = q}
+      ((sym $ neg-assoc* {a = u} {b = b}) ∙ cong -_ x ∙ neg-assoc* {a = v} {b = a})
+      i
+    negative (trunc q q₁ x y i i₁) = trunc (negative q) (negative q₁) (cong negative x) (cong negative y) i i₁
+
+instance
+  ℚ- : Op- ℚ ℚ (const₂ ℚ)
+  _-_ ⦃ ℚ- ⦄ q r = q + (- r)
+
+private
+  pabsℤ : ℤ → ℤ
+  pabsℤ = pos ∘ absℤ
+
+  abs-distrib* : {a b : ℤ} → pabsℤ (a * b) ≡ pabsℤ a * pabsℤ b
+  abs-distrib* {pos n} {pos n₁} = refl
+  abs-distrib* {pos n} {neg zero} = refl
+  abs-distrib* {pos n} {neg (suc n₁)} = refl
+  abs-distrib* {pos n} {posneg i} = refl
+  abs-distrib* {neg zero} {pos n₁} = refl
+  abs-distrib* {neg (suc n)} {pos n₁} = refl
+  abs-distrib* {neg zero} {neg zero} = refl
+  abs-distrib* {neg zero} {neg (suc n₁)} = refl
+  abs-distrib* {neg (suc n)} {neg zero} = refl
+  abs-distrib* {neg (suc n)} {neg (suc n₁)} = refl
+  abs-distrib* {neg zero} {posneg i} = refl
+  abs-distrib* {neg (suc n)} {posneg i} = refl
+  abs-distrib* {posneg i} {pos n} = refl
+  abs-distrib* {posneg i} {neg zero} = refl
+  abs-distrib* {posneg i} {neg (suc n)} = refl
+  abs-distrib* {posneg i} {posneg i₁} = refl
+
+  abs-zero : {a : ℤ} → pabsℤ a ≡ 0 → a ≡ 0
+  abs-zero {pos n} = id
+  abs-zero {neg n} p = cong (neg ∘ absℤ) p ∙ (sym posneg)
+  abs-zero {posneg i} = {!!}
 
 abs : ℚ → ℚ
+abs (con u a x) = con (pabsℤ u) (pabsℤ a) λ y → x (abs-zero y) 
+abs (path u a v b {p} {q} x i) = path (pabsℤ u) (pabsℤ a) (pabsℤ v) (pabsℤ b)
+  {p = λ x → p (abs-zero x)}
+  {q = λ x → q (abs-zero x)}
+  ((sym $ abs-distrib* {a = u} {b = b}) ∙ cong pabsℤ x ∙ abs-distrib* {a = v} {b = a})
+  i
+abs (trunc q q₁ x y i i₁) = trunc (abs q) (abs q₁) (cong abs x) (cong abs y) i i₁
+{-
 abs q@(con (pos _) (pos _) _) = q
 abs (con (posneg i) a@(pos _) a≢0) =  con 0 a a≢0 
 abs (con (neg n) a@(pos _) a≢0) = con (pos n) a a≢0
-abs (con (pos n) (neg m) a≢0) = con (pos n) (pos m) {!!}
-abs (con (neg n) (neg m) a≢0) = con (pos n) (pos m) {!!}
-abs (con (pos _) (posneg i) a≢0) = {!!}
-abs (con (neg _) (posneg i) a≢0) = {!!}
-abs (con (posneg i) a@(neg m) a≢0) = ?
+abs (con (pos n) (neg m) a≢0) = con (pos n) (pos m) λ x → a≢0 $ cong (neg ∘ absℤ) x ∙ (sym posneg)
+abs (con (neg n) (neg m) a≢0) = con (pos n) (pos m) λ x → a≢0 $ cong (neg ∘ absℤ) x ∙ (sym posneg)
+abs (con (pos n) (posneg i) a≢0) = con (pos n) 0 λ x → {!!}
+abs (con (neg n) (posneg i) a≢0) = con (pos n) 0 λ x → {!!}
+abs (con (posneg i) (neg m) a≢0) = con 0 (pos m) λ x → a≢0 $ cong (neg ∘ absℤ) x ∙ (sym posneg)
 abs (con (posneg i) (posneg j) a≢0) = {!!}
-abs (path u a v b x i) = {!!}
+abs (path u a v b {p₁} {p₂} x i) = let p = pos ∘ absℤ in path (p u) (p a) (p v) (p b) {p = λ x → {!!}} {q = {!!}} {!!} {!i!}
 abs (trunc q q₁ x y i i₁) = trunc (abs q) (abs q₁) (cong abs x) (cong abs y) i i₁
+-}
 
 infix 10 _~⟨_⟩_
 
@@ -394,8 +478,8 @@ data ℝ where
   eq : (u v : ℝ) → ((ε : ℚ) ⦃ _ : ε > 0 ≡ true ⦄ → u ~⟨ ε ⟩ v) → u ≡ v
 
 data _~⟨_⟩_ where
---  ~-rat-rat : ∀ {q r ε} → abs (q - r) < ε → rat q ~⟨ ε ⟩ rat r
---  ~-rat-lim : ∀ {q y l δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → rat q ~⟨ ε - δ ⟩ y δ → rat q ~⟨ ε ⟩ lim y l
---  ~-lim-rat : ∀ {x l r δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → x δ ~⟨ ε - δ ⟩ rat r → lim x l ~⟨ ε ⟩ rat r
---  ~-lim-lim : ∀ {x lₓ y ly ε δ η} ⦃ _ : ε > δ ≡ true ⦄ ⦃ _ : ε - δ > η ≡ true ⦄ → x δ ~⟨ ε - δ - η ⟩ y η → lim x lₓ ~⟨ ε ⟩ lim y ly
---  ~-id : ∀ {u v ε} ⦃ _ : ε > 0 ≡ true ⦄ {ζ ξ : u ~⟨ ε ⟩ v} → ζ ≡ ξ
+  ~-rat-rat : ∀ {q r ε} ⦃ _ : ε > 0 ≡ true ⦄ → abs (q - r) < ε ≡ true → rat q ~⟨ ε ⟩ rat r
+  ~-rat-lim : ∀ {q y l δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → rat q ~⟨ ε - δ ⟩ y δ → rat q ~⟨ ε ⟩ lim y l
+  ~-lim-rat : ∀ {x l r δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → x δ ~⟨ ε - δ ⟩ rat r → lim x l ~⟨ ε ⟩ rat r
+  ~-lim-lim : ∀ {x lₓ y ly ε δ η} ⦃ _ : ε > 0 ≡ true ⦄ ⦃ _ : ε - δ - η > 0 ≡ true ⦄ → x δ ~⟨ ε - δ - η ⟩ y η → lim x lₓ ~⟨ ε ⟩ lim y ly
+  ~-id : ∀ {u v ε} ⦃ _ : ε > 0 ≡ true ⦄ {ζ ξ : u ~⟨ ε ⟩ v} → ζ ≡ ξ
