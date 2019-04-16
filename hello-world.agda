@@ -1,8 +1,7 @@
-{-# OPTIONS --cubical --exact-split #-}
+{-# OPTIONS --cubical --safe --exact-split --without-K #-}
 
 module hello-world where
 
-open import IO
 open import Cubical.Foundations.Prelude
 open import Cubical.Relation.Nullary
 open import Cubical.HITs.HitInt renaming (abs to absℤ ; Sign to Sign'; sign to sign')
@@ -10,6 +9,8 @@ open import Cubical.HITs.Rational
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat renaming (_+_ to _+ℕ_; _*_ to _*ℕ_)
 open import Cubical.Data.Empty
+open import Cubical.Data.Unit
+open import Agda.Primitive
 
 private
   variable
@@ -17,6 +18,47 @@ private
 
 const₂ : {A B : Set ℓ} {C : Set ℓ'} → C → A → B → C
 const₂ c _ _ = c
+
+record FromNat (A : Set ℓ) : Set (lsuc ℓ) where
+  field
+    Constraint : ℕ → Set ℓ
+    fromNat : (n : ℕ) ⦃ _ : Constraint n ⦄ → A
+open FromNat ⦃ ... ⦄ public using (fromNat)
+
+{-# BUILTIN FROMNAT fromNat #-}
+
+record FromNeg (A : Set ℓ) : Set (lsuc ℓ) where
+  field
+    Constraint : ℕ → Set ℓ
+    fromNeg : (n : ℕ) ⦃ _ : Constraint n ⦄ → A
+open FromNeg ⦃ ... ⦄ public using (fromNeg)
+
+{-# BUILTIN FROMNEG fromNeg #-}
+
+instance
+  NatFromNat : FromNat ℕ
+  NatFromNat .FromNat.Constraint _ = Unit
+  fromNat ⦃ NatFromNat ⦄ n = n
+
+instance
+  ℤFromNat : FromNat ℤ
+  ℤFromNat .FromNat.Constraint _ = Unit
+  fromNat ⦃ ℤFromNat ⦄ n = pos n
+
+instance
+  ℤFromNeg : FromNeg ℤ
+  ℤFromNeg .FromNeg.Constraint _ = Unit
+  fromNeg ⦃ ℤFromNeg ⦄ n = neg n
+
+instance
+  ℚFromNat : FromNat ℚ
+  ℚFromNat .FromNat.Constraint _ = Unit
+  fromNat ⦃ ℚFromNat ⦄ n = int (pos n)
+
+instance
+  ℚFromNeg : FromNeg ℚ
+  ℚFromNeg .FromNeg.Constraint _ = Unit
+  fromNeg ⦃ ℚFromNeg ⦄ n = int (neg n)
 
 record Op< (A B : Set ℓ) (C : A → B → Set ℓ') : Set (ℓ-max ℓ ℓ') where
   infix 5 _<_
@@ -215,7 +257,7 @@ instance
 private
   -- use of this lemma could be made automatic by changing `path` to take instance arguments instead of implicit arguments.
   -- `nonzero-prod` would then be an instance of `¬ (q * r ≡ pos 0)`
-  nonzero-prod : (q r : ℤ) → ¬ (q ≡ pos zero) → ¬ (r ≡ pos zero) → ¬ (q * r ≡ pos 0)
+  nonzero-prod : (q r : ℤ) → ¬ (q ≡ 0) → ¬ (r ≡ 0) → ¬ (q * r ≡ 0)
   nonzero-prod (pos (suc n)) (pos (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
   nonzero-prod (pos (suc n)) (neg (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
   nonzero-prod (neg (suc n)) (pos (suc m)) _ _ q*r≡0 = snotz (cong absℤ q*r≡0)
@@ -243,6 +285,20 @@ instance
     q@(path _ _ _ _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     trunc q q₁ x y i i₁ plus r = trunc (q plus r) (q₁ plus r) (cong (_plus r) x) (cong (_plus r) y) i i₁
+
+
+abs : ℚ → ℚ
+abs q@(con (pos _) (pos _) _) = q
+abs (con (posneg i) a@(pos _) a≢0) =  con 0 a a≢0 
+abs (con (neg n) a@(pos _) a≢0) = con (pos n) a a≢0
+abs (con (pos n) (neg m) a≢0) = con (pos n) (pos m) {!!}
+abs (con (neg n) (neg m) a≢0) = con (pos n) (pos m) {!!}
+abs (con (pos _) (posneg i) a≢0) = {!!}
+abs (con (neg _) (posneg i) a≢0) = {!!}
+abs (con (posneg i) a@(neg m) a≢0) = ?
+abs (con (posneg i) (posneg j) a≢0) = {!!}
+abs (path u a v b x i) = {!!}
+abs (trunc q q₁ x y i i₁) = trunc (abs q) (abs q₁) (cong abs x) (cong abs y) i i₁
 
 infix 10 _~⟨_⟩_
 
@@ -330,16 +386,16 @@ infix 10 _~⟨_⟩_
 --   q + r = {!!}
 
 data ℝ : Set
-data _~⟨_⟩_ : ℝ → (tol : ℚ) → ⦃ _ : tol > int (pos 0) ≡ true ⦄ → ℝ → Set
+data _~⟨_⟩_ : ℝ → (tol : ℚ) → ⦃ _ : tol > 0 ≡ true ⦄ → ℝ → Set
 
 data ℝ where
   rat : (q : ℚ) → ℝ
-  lim : (x : ℚ → ℝ) → ((δ ε : ℚ) ⦃ _ : δ + ε > int (pos 0) ≡ true ⦄ → x δ ~⟨ δ + ε ⟩ x ε) → ℝ
-  eq : (u v : ℝ) → ((ε : ℚ) ⦃ _ : ε > int (pos 0) ≡ true ⦄ → u ~⟨ ε ⟩ v) → u ≡ v
+  lim : (x : ℚ → ℝ) → ((δ ε : ℚ) ⦃ _ : δ + ε > 0 ≡ true ⦄ → x δ ~⟨ δ + ε ⟩ x ε) → ℝ
+  eq : (u v : ℝ) → ((ε : ℚ) ⦃ _ : ε > 0 ≡ true ⦄ → u ~⟨ ε ⟩ v) → u ≡ v
 
 data _~⟨_⟩_ where
---   ~-rat-rat : ∀ {q r ε} → abs (q - r) < ε → rat q ~⟨ ε ⟩ rat r
---   ~-rat-lim : ∀ {q y l δ ε} ⦃ _ : ε ℚ₊.> δ ⦄ → rat q ~⟨ ε ℚ₊.- δ ⟩ y δ → rat q ~⟨ ε ⟩ lim y l
---   ~-lim-rat : ∀ {x l r δ ε} ⦃ _ : ε ℚ₊.> δ ⦄ → x δ ~⟨ ε ℚ₊.- δ ⟩ rat r → lim x l ~⟨ ε ⟩ rat r
---   ~-lim-lim : ∀ {x lₓ y ly ε δ η} ⦃ _ : ε ℚ₊.> δ ⦄ ⦃ _ : (ε ℚ₊.- δ) ℚ₊.> η ⦄ → x δ ~⟨ (ε ℚ₊.- δ) ℚ₊.- η ⟩ y η → lim x lₓ ~⟨ ε ⟩ lim y ly
---   ~-id : ∀ {u v ε} {ζ ξ : u ~⟨ ε ⟩ v} → ζ ≡ ξ
+--  ~-rat-rat : ∀ {q r ε} → abs (q - r) < ε → rat q ~⟨ ε ⟩ rat r
+--  ~-rat-lim : ∀ {q y l δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → rat q ~⟨ ε - δ ⟩ y δ → rat q ~⟨ ε ⟩ lim y l
+--  ~-lim-rat : ∀ {x l r δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → x δ ~⟨ ε - δ ⟩ rat r → lim x l ~⟨ ε ⟩ rat r
+--  ~-lim-lim : ∀ {x lₓ y ly ε δ η} ⦃ _ : ε > δ ≡ true ⦄ ⦃ _ : ε - δ > η ≡ true ⦄ → x δ ~⟨ ε - δ - η ⟩ y η → lim x lₓ ~⟨ ε ⟩ lim y ly
+--  ~-id : ∀ {u v ε} ⦃ _ : ε > 0 ≡ true ⦄ {ζ ξ : u ~⟨ ε ⟩ v} → ζ ≡ ξ
