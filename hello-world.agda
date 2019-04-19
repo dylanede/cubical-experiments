@@ -283,7 +283,116 @@ private
   nonzero-prod q@(pos (suc _)) (posneg i) _ r≢0 _ = r≢0 λ j → posneg (i ∧ ~ j)
   nonzero-prod q@(neg (suc _)) (posneg i) _ r≢0 _ = r≢0 λ j → posneg (i ∧ ~ j)
   nonzero-prod (posneg i) _ q≢0 _ _ = q≢0 λ j → posneg (i ∧ ~ j)
+  
+  lemma : (m n : ℕ) → n + m * suc n ≡ m + n * suc m
+  lemma m n =
+    ( n + m * suc n ≡⟨ cong (n +_) $ *-suc m n ⟩
+      n + (m + m * n) ≡⟨ +-assoc n m (m * n) ⟩
+      n + m + m * n ≡⟨ cong (_+ m * n) $ +-comm n m ⟩
+      m + n + m * n ≡⟨ cong (m + n +_) $ *-comm m n ⟩
+      m + n + n * m ≡⟨ sym $ +-assoc m n (n * m) ⟩
+      m + (n + n * m) ≡⟨ cong (m +_) $ sym $ *-suc n m ⟩
+      m + n * suc m ∎
+    )
 
+  0≡m*ℤ0 : (m : ℤ) → 0 ≡ m * 0
+  0≡m*ℤ0 (pos n) = cong pos $ 0≡m*0 n
+  0≡m*ℤ0 (neg zero) = refl
+  0≡m*ℤ0 (neg (suc n)) = posneg ∙ (cong ℤ.neg $ 0≡m*0 n)
+  0≡m*ℤ0 (posneg i) = refl
+
+  0≡0*ℤm : (m : ℤ) → 0 ≡ 0 * m
+  0≡0*ℤm (pos n) = refl
+  0≡0*ℤm (neg zero) = refl
+  0≡0*ℤm (neg (suc n)) = posneg
+  0≡0*ℤm (posneg i) = refl
+
+
+  m≡m*1 : (m : ℕ) → m ≡ m * 1
+  m≡m*1 zero = refl
+  m≡m*1 (suc m) = cong suc $ m≡m*1 m
+
+  m≡m*ℤ1 : (m : ℤ) → m ≡ m * 1
+  m≡m*ℤ1 (pos zero) = refl
+  m≡m*ℤ1 (pos (suc n)) = cong (ℤ.pos ∘ suc) $ m≡m*1 n
+  m≡m*ℤ1 (neg zero) = sym posneg
+  m≡m*ℤ1 (neg (suc n)) = cong (ℤ.neg ∘ suc) $ m≡m*1 n
+  m≡m*ℤ1 (posneg i) = λ j → posneg (i ∧ ~ j)
+
+
+  ℤ*-suc : (m n : ℤ) → m * sucℤ n ≡ m + m * n
+  ℤ*-suc (pos zero) n = 
+    ( 0 * sucℤ n ≡⟨ sym $ 0≡0*ℤm $ sucℤ n ⟩
+      0 ≡⟨ cong (0 +_) $ 0≡0*ℤm n ⟩
+      0 + 0 * n ∎
+    )
+  ℤ*-suc (neg zero) n =
+    ( 0 * sucℤ n ≡⟨ sym $ 0≡0*ℤm $ sucℤ n ⟩
+      0 ≡⟨ cong (0 +_) $ 0≡0*ℤm n ⟩
+      0 + 0 * n ≡⟨ cong (_+ 0 * n) posneg ⟩
+      (neg zero) + 0 * n ∎
+    )
+  ℤ*-suc (pos (suc m)) (pos n) = {!!}
+  ℤ*-suc (pos (suc m)) (neg n) = {!!}
+  ℤ*-suc (pos (suc m)) (posneg i) = {!!}
+  ℤ*-suc (neg (suc m)) n = {!!}
+  ℤ*-suc (posneg i) n = {!!}
+
+  ℤ*-commutes : (q r : ℤ) → q * r ≡ r * q
+  ℤ*-commutes (pos zero) r =
+    ( 0 * r ≡⟨ sym $ 0≡0*ℤm r ⟩
+      0 ≡⟨ 0≡m*ℤ0 r ⟩
+      r * 0 ∎
+    )
+  ℤ*-commutes (neg zero) r =
+    ( 0 * r ≡⟨ sym $ 0≡0*ℤm r ⟩
+      0 ≡⟨ 0≡m*ℤ0 r ⟩
+      r * 0 ∎
+    )
+  ℤ*-commutes (posneg i) r = 
+    ( 0 * r ≡⟨ sym $ 0≡0*ℤm r ⟩
+      0 ≡⟨ 0≡m*ℤ0 r ⟩
+      r * 0 ∎
+    )
+  ℤ*-commutes (pos (suc n)) r = {!!}
+  ℤ*-commutes (neg (suc n)) r = {!!}
+  {-
+  ℤ*-commutes (pos zero) (pos zero) = refl
+  ℤ*-commutes (neg zero) (pos zero) = refl
+  ℤ*-commutes (posneg i) (pos zero) = refl
+  ℤ*-commutes (pos zero) (neg zero) = refl
+  ℤ*-commutes (neg zero) (neg zero) = refl
+  ℤ*-commutes (posneg i) (neg zero) = refl
+  ℤ*-commutes (pos zero) (posneg i) = refl
+  ℤ*-commutes (neg zero) (posneg i) = refl
+  ℤ*-commutes (posneg i) (posneg j) = refl
+  ℤ*-commutes (pos zero) (pos (suc n)) = cong pos $ 0≡m*0 n
+  ℤ*-commutes (neg zero) (pos (suc n)) = cong pos $ 0≡m*0 n
+  ℤ*-commutes (posneg i) (pos (suc n)) = cong pos $ 0≡m*0 n
+  ℤ*-commutes (pos zero) (neg (suc n)) = cong neg $ 0≡m*0 n
+  ℤ*-commutes (neg zero) (neg (suc n)) = cong neg $ 0≡m*0 n
+  ℤ*-commutes (posneg i) (neg (suc n)) = cong neg $ 0≡m*0 n
+  ℤ*-commutes (pos (suc m)) (pos zero) = cong pos $ sym $ 0≡m*0 m
+  ℤ*-commutes (neg (suc m)) (pos zero) = cong neg $ sym $ 0≡m*0 m
+  ℤ*-commutes (pos (suc m)) (neg zero) = cong pos $ sym $ 0≡m*0 m
+  ℤ*-commutes (neg (suc m)) (neg zero) = cong neg $ sym $ 0≡m*0 m
+  ℤ*-commutes (pos (suc m)) (posneg i) = cong pos $ sym $ 0≡m*0 m
+  ℤ*-commutes (neg (suc m)) (posneg i) = cong neg $ sym $ 0≡m*0 m
+  ℤ*-commutes (pos (suc m)) (neg (suc n)) = cong (ℤ.neg ∘ suc) $ lemma m n
+  ℤ*-commutes (neg (suc m)) (neg (suc n)) = cong (ℤ.pos ∘ suc) $ lemma m n
+  ℤ*-commutes (pos (suc m)) (pos (suc n)) = cong (ℤ.pos ∘ suc) $ lemma m n
+  ℤ*-commutes (neg (suc m)) (pos (suc n)) = cong (ℤ.neg ∘ suc) $ lemma m n
+-}
+
+  -- induction on s?
+  ℤ*+-right-distrib : (q r s : ℤ) → (q + r) * s ≡ q * s + r * s
+  ℤ*+-right-distrib q r (pos zero) = {!!}
+  ℤ*+-right-distrib q r (pos (suc n)) = {!!}
+  ℤ*+-right-distrib q r (neg zero) = {!!}
+  ℤ*+-right-distrib q r (neg (suc n)) = {!!}
+  ℤ*+-right-distrib q r (posneg i) = {!!}
+  
+  --right-distrib : (q r s : ℤ) → (q + r) * s ≡ q * s + r * s
   --+-distrib
   
 instance
@@ -358,9 +467,11 @@ private
   abs-distrib* {posneg i} {posneg i₁} = refl
 
   abs-zero : {a : ℤ} → pabsℤ a ≡ 0 → a ≡ 0
-  abs-zero {pos n} = id
-  abs-zero {neg n} p = cong (neg ∘ absℤ) p ∙ (sym posneg)
-  abs-zero {posneg i} = {!!}
+  abs-zero {pos zero} _ = refl
+  abs-zero {pos (suc _)} p = p
+  abs-zero {neg zero} _ = sym posneg
+  abs-zero {neg (suc _)} p = cong (neg ∘ absℤ) p ∙ (sym posneg)
+  abs-zero {posneg i} _ = λ j → posneg (i ∧ ~ j)
 
 abs : ℚ → ℚ
 abs (con u a x) = con (pabsℤ u) (pabsℤ a) λ y → x (abs-zero y) 
@@ -370,104 +481,8 @@ abs (path u a v b {p} {q} x i) = path (pabsℤ u) (pabsℤ a) (pabsℤ v) (pabs�
   ((sym $ abs-distrib* {a = u} {b = b}) ∙ cong pabsℤ x ∙ abs-distrib* {a = v} {b = a})
   i
 abs (trunc q q₁ x y i i₁) = trunc (abs q) (abs q₁) (cong abs x) (cong abs y) i i₁
-{-
-abs q@(con (pos _) (pos _) _) = q
-abs (con (posneg i) a@(pos _) a≢0) =  con 0 a a≢0 
-abs (con (neg n) a@(pos _) a≢0) = con (pos n) a a≢0
-abs (con (pos n) (neg m) a≢0) = con (pos n) (pos m) λ x → a≢0 $ cong (neg ∘ absℤ) x ∙ (sym posneg)
-abs (con (neg n) (neg m) a≢0) = con (pos n) (pos m) λ x → a≢0 $ cong (neg ∘ absℤ) x ∙ (sym posneg)
-abs (con (pos n) (posneg i) a≢0) = con (pos n) 0 λ x → {!!}
-abs (con (neg n) (posneg i) a≢0) = con (pos n) 0 λ x → {!!}
-abs (con (posneg i) (neg m) a≢0) = con 0 (pos m) λ x → a≢0 $ cong (neg ∘ absℤ) x ∙ (sym posneg)
-abs (con (posneg i) (posneg j) a≢0) = {!!}
-abs (path u a v b {p₁} {p₂} x i) = let p = pos ∘ absℤ in path (p u) (p a) (p v) (p b) {p = λ x → {!!}} {q = {!!}} {!!} {!i!}
-abs (trunc q q₁ x y i i₁) = trunc (abs q) (abs q₁) (cong abs x) (cong abs y) i i₁
--}
 
 infix 10 _~⟨_⟩_
-
--- data Sign : Set where
---   pos neg zero : Sign
-
--- data ℤ-has-sign : Sign → ℤ → Set where
---   ℤ-pos : ∀ n → ℤ-has-sign pos (pos (suc n))
---   ℤ-zero : ℤ-has-sign zero (pos zero)
---   ℤ-neg : ∀ n → ℤ-has-sign neg (neg (suc n))
-
--- ℤ₊ : Set
--- ℤ₊ = Σ ℤ (ℤ-has-sign pos)
-
--- ℤ₋ : Set
--- ℤ₋ = Σ ℤ (ℤ-has-sign neg)
-
--- sign-ℤ : (z : ℤ) → Σ[ s ∈ Sign ] (ℤ-has-sign s z)
--- sign-ℤ (pos zero) = zero , ℤ-zero
--- sign-ℤ (pos (suc n)) = pos , ℤ-pos n
--- sign-ℤ (neg zero) = zero , subst (ℤ-has-sign zero) posneg ℤ-zero
--- sign-ℤ (neg (suc n)) = neg , ℤ-neg n
--- sign-ℤ (posneg i) = zero , hfill (λ j → \
---   { (i = i0) → ℤ-zero
---   ; (i = i1) → subst (ℤ-has-sign zero) posneg ℤ-zero
---   }) {!!} i -- no idea
-
--- data ℚ-has-sign : Sign → ℚ → Set where
---   ℚ-pos₁ : ∀ {u a x} → ℤ-has-sign pos u → ℤ-has-sign pos a → ℚ-has-sign pos (con u a x)
---   ℚ-pos₂ : ∀ {u a x} → ℤ-has-sign neg u → ℤ-has-sign neg a → ℚ-has-sign pos (con u a x)
---   ℚ-zero : ∀ {u a x} → ℤ-has-sign zero u → ℚ-has-sign zero (con u a x)
---   ℚ-neg₁ : ∀ {u a x} → ℤ-has-sign pos u → ℤ-has-sign neg a → ℚ-has-sign neg (con u a x)
---   ℚ-neg₂ : ∀ {u a x} → ℤ-has-sign neg u → ℤ-has-sign pos a → ℚ-has-sign neg (con u a x)
-
--- ℚ₊ : Set
--- ℚ₊ = Σ ℚ (ℚ-has-sign pos)
-
--- ℚ₋ : Set
--- ℚ₋ = Σ ℚ (ℚ-has-sign neg)
-
--- sign-ℚ : (q : ℚ) → Σ[ s ∈ Sign ] (ℚ-has-sign s q)
--- sign-ℚ (con u a x) = case sign-ℤ u , sign-ℤ a of λ
---   { ((pos , u-pos) , pos , a-pos) → pos , ℚ-pos₁ u-pos a-pos
---   ; ((pos , u-pos) , neg , a-neg) → neg , ℚ-neg₁ u-pos a-neg
---   ; ((pos , u-pos) , zero , ℤ-zero) → ⊥-elim (x refl)
---   ; ((neg , u-neg) , pos , a-pos) → neg , ℚ-neg₂ u-neg a-pos
---   ; ((neg , u-neg) , neg , a-neg) → pos , ℚ-pos₂ u-neg a-neg
---   ; ((neg , u-neg) , zero , ℤ-zero) → ⊥-elim (x refl)
---   ; ((zero , u-zero) , _) → zero , ℚ-zero u-zero
---   }
--- sign-ℚ (path u a v b x i) = {!!} -- no idea
--- sign-ℚ (trunc q q₁ x y i i₁) = {!!} -- no idea
-
--- abs : ℚ → ℚ₊
--- abs q = {!!}
-
--- {-
--- record Field {n} (F : Set a) : Set a where
---   field
---     +-
---     _+_ : A → A → A
---     _*_ : A → A → A
---     zero : A
---     one : A
--- -}
-
--- infixl 20 _-_
-
--- module ⟨ℚ⟩ where
---   _-_ : ℚ → ℚ → ℚ
---   q - r = {!!}
---   _>_ : ℚ → ℚ → Set
---   q > r = ℚ-has-sign pos (q - r)
---   _<_ : ℚ → ℚ → Set
---   q < r = ℚ-has-sign neg (q - r)
-
--- module ℚ₊ where
---   _>_ : ℚ₊ → ℚ₊ → Set
---   (q , _) > (r , _) = ℚ-has-sign pos (q - r) where open ⟨ℚ⟩
---   _<_ : ℚ₊ → ℚ₊ → Set
---   q < r = r > q
---   _-_ : (q : ℚ₊) → (r : ℚ₊) → ⦃ _ : q > r ⦄ → ℚ₊
---   q - r = {!!}
---   _+_ : ℚ₊ → ℚ₊ → ℚ₊
---   q + r = {!!}
 
 data ℝ : Set
 data _~⟨_⟩_ : ℝ → (tol : ℚ) → ⦃ _ : tol > 0 ≡ true ⦄ → ℝ → Set
@@ -482,4 +497,5 @@ data _~⟨_⟩_ where
   ~-rat-lim : ∀ {q y l δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → rat q ~⟨ ε - δ ⟩ y δ → rat q ~⟨ ε ⟩ lim y l
   ~-lim-rat : ∀ {x l r δ ε} ⦃ _ : ε - δ > 0 ≡ true ⦄ ⦃ _ : ε > 0 ≡ true ⦄ → x δ ~⟨ ε - δ ⟩ rat r → lim x l ~⟨ ε ⟩ rat r
   ~-lim-lim : ∀ {x lₓ y ly ε δ η} ⦃ _ : ε > 0 ≡ true ⦄ ⦃ _ : ε - δ - η > 0 ≡ true ⦄ → x δ ~⟨ ε - δ - η ⟩ y η → lim x lₓ ~⟨ ε ⟩ lim y ly
-  ~-id : ∀ {u v ε} ⦃ _ : ε > 0 ≡ true ⦄ {ζ ξ : u ~⟨ ε ⟩ v} → ζ ≡ ξ
+  ~-isProp : ∀ {u v ε} ⦃ _ : ε > 0 ≡ true ⦄ → isProp (u ~⟨ ε ⟩ v)
+
