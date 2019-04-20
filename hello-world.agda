@@ -320,6 +320,13 @@ private
   ℤ+-pred m (neg n) = refl
   ℤ+-pred m (posneg i) = refl
 
+  ℤ+-suc : (m n : ℤ) → m + sucℤ n ≡ sucℤ (m + n)
+  ℤ+-suc m (pos zero) = refl
+  ℤ+-suc m (pos (suc n)) = refl
+  ℤ+-suc m (neg zero) = refl
+  ℤ+-suc m (neg (suc n)) = sym $ sucPredℤ (m + neg n)
+  ℤ+-suc m (posneg i) = refl
+
   ℤ+-comm-0 : (z : ℤ) → (i : I) → posneg i + z ≡ z
   ℤ+-comm-0 z i = cong (_+ z) (λ j → posneg (i ∧ ~ j)) ∙ sym (m≡0+ℤm z)
 
@@ -385,6 +392,26 @@ private
       neg (suc n) + neg m ∎
     )
 
+  ℤ+-assoc : (m n o : ℤ) → m + (n + o) ≡ m + n + o
+  ℤ+-assoc m n (pos zero) = refl
+  ℤ+-assoc m n (pos (suc o)) = 
+    ( m + sucℤ (n + pos o) ≡⟨ ℤ+-suc m (n + pos o) ⟩
+      sucℤ (m + (n + pos o)) ≡⟨ cong sucℤ $ ℤ+-assoc m n (pos o) ⟩
+      sucℤ (m + n + pos o) ∎
+    )
+  ℤ+-assoc m n (neg zero) = refl
+  ℤ+-assoc m n (neg (suc o)) = 
+    ( m + predℤ (n + neg o) ≡⟨ ℤ+-pred m (n + neg o) ⟩
+      predℤ (m + (n + neg o)) ≡⟨ cong predℤ $ ℤ+-assoc m n (neg o) ⟩
+      predℤ (m + n + neg o) ∎
+    )
+  ℤ+-assoc m n (posneg i) = refl
+
+  foo : (m n : ℕ) → neg m * neg n ≡ pos m * pos n
+  foo m zero = {!!}
+  foo zero (suc n) = {!!}
+  foo (suc m) (suc n) = {!!}
+
   lemma : (m n : ℕ) → n + m * suc n ≡ m + n * suc m
   lemma m n =
     ( n + m * suc n ≡⟨ cong (n +_) $ *-suc m n ⟩
@@ -439,6 +466,10 @@ private
       sucℤ (pos m + pos n) ∎
     )
 
+  neg-distrib-* : (m n : ℕ) → neg (m * n) ≡ neg m * pos n
+  neg-distrib-* m zero = {!!}
+  neg-distrib-* m (suc n) = {!!}
+
   lemma2 : (m n : ℕ) → suc (n + m * suc (suc n)) ≡ suc m + (n + m * suc n)
   lemma2 m n = 
     ( suc (n + m * suc (suc n)) ≡⟨ cong (suc ∘ (n +_)) $ *-suc m (suc n) ⟩
@@ -460,11 +491,17 @@ private
 
   ℤ-m+-m≡0 : (m : ℕ) → pos m + neg m ≡ 0
   ℤ-m+-m≡0 zero = refl
-  ℤ-m+-m≡0 (suc m) = {!
-    ( predℤ (pos (suc m) + neg m) ≡⟨ sym $ ℤ+-pred (neg m) (pos (suc m)) ⟩
-      predℤ (pos (suc m)
+  ℤ-m+-m≡0 (suc m) = 
+    ( predℤ (pos (suc m) + neg m) ≡⟨ cong predℤ $ ℤ+-comm (pos (suc m)) (neg m) ⟩
+      predℤ (neg m + pos (suc m)) ≡⟨ refl ⟩
+      predℤ (sucℤ (neg m + pos m)) ≡⟨ predSucℤ _ ⟩
+      neg m + pos m ≡⟨ ℤ+-comm (neg m) (pos m) ⟩
+      pos m + neg m ≡⟨ ℤ-m+-m≡0 m ⟩
       0 ∎
-    )!}
+    )
+
+  ℤ--m+m≡0 : (m : ℕ) → neg m + pos m ≡ 0
+  ℤ--m+m≡0 m = ℤ+-comm (neg m) (pos m) ∙ ℤ-m+-m≡0 m
 
   ℤ*-suc : (m n : ℤ) → m * sucℤ n ≡ m + m * n
   ℤ*-suc m (pos zero) = lemma3 m i0
@@ -479,14 +516,55 @@ private
   ℤ*-suc (neg zero) (neg (suc (suc n))) = refl
   ℤ*-suc (posneg i) (neg (suc zero)) = λ j → posneg (i ∧ j)
   ℤ*-suc (posneg i) (neg (suc (suc n))) =  λ j → posneg (i ∨ ~ j)
-  ℤ*-suc (pos (suc m)) (neg (suc zero)) = {!
-    ( pos (suc m) * -0 ≡⟨ ⟩
-      pos (suc m) * 0 ≡⟨ ⟩
-      0 ≡⟨ ⟩
-      predℤ (pos (suc m) + neg m) ≡⟨ ⟩
+  ℤ*-suc (pos (suc m)) (neg (suc zero)) = 
+    ( pos (suc m) * -0 ≡⟨ cong (pos (suc m) *_) $ sym $ posneg ⟩
+      pos (suc m) * 0 ≡⟨ sym $ 0≡m*ℤ0 (pos (suc m)) ⟩
+      0 ≡⟨ sym $ ℤ--m+m≡0 m ⟩
+      neg m + pos m ≡⟨ sym $ predSucℤ _ ⟩
+      predℤ (sucℤ (neg m + pos m)) ≡⟨ refl ⟩
+      predℤ (neg m + pos (suc m)) ≡⟨ cong predℤ $ ℤ+-comm (neg m) (pos (suc m)) ⟩
+      predℤ (pos (suc m) + neg m) ≡⟨ cong (predℤ ∘ (pos (suc m) +_) ∘ ℤ.neg) $ m≡m*1 m ⟩
       predℤ (pos (suc m) + neg (m * 1)) ∎
-    )!}
-  ℤ*-suc (neg (suc m)) (neg (suc zero)) = {!!}
+    )
+  ℤ*-suc (pos (suc m)) (neg (suc (suc n))) = cong predℤ $ sym
+    ( predℤ (pos (suc m) + neg (n + m * suc (suc n))) ≡⟨ cong predℤ $ ℤ+-comm (pos (suc m)) (neg (n + m * suc (suc n))) ⟩
+      predℤ (neg (n + m * suc (suc n)) + pos (suc m)) ≡⟨ refl ⟩
+      predℤ (sucℤ (neg (n + m * suc (suc n)) + pos m)) ≡⟨ predSucℤ (neg (n + m * suc (suc n)) + pos m) ⟩
+      neg (n + m * suc (suc n)) + pos m ≡⟨ cong ((_+ pos m) ∘ ℤ.neg ∘ (n +_)) $ *-suc m (suc n) ⟩
+      neg (n + (m + m * suc n)) + pos m ≡⟨ cong ((_+ pos m) ∘ ℤ.neg ∘ (n +_)) $ +-comm m (m * suc n) ⟩
+      neg (n + (m * suc n + m)) + pos m ≡⟨ cong ((_+ pos m) ∘ ℤ.neg) $ +-assoc n (m * suc n) m ⟩
+      neg (n + m * suc n + m) + pos m ≡⟨ cong (_+ pos m) $ neg-distrib-+ (n + m * suc n) m ⟩
+      neg (n + m * suc n) + neg m + pos m ≡⟨ sym $ ℤ+-assoc (neg (n + m * suc n)) (neg m) (pos m) ⟩
+      neg (n + m * suc n) + (neg m + pos m) ≡⟨ cong (neg (n + m * suc n) +_) $ ℤ--m+m≡0 m ⟩
+      neg (n + m * suc n) + 0 ≡⟨ refl ⟩
+      neg (n + m * suc n) ∎
+    )
+  ℤ*-suc (neg (suc m)) (neg (suc zero)) = 
+    ( neg (suc m) * -0 ≡⟨ cong (neg (suc m) *_) $ sym $ posneg ⟩
+      neg (suc m) * 0 ≡⟨ sym $ 0≡m*ℤ0 (neg (suc m)) ⟩
+      0 ≡⟨ sym $ ℤ-m+-m≡0 m ⟩
+      pos m + neg m ≡⟨ sym $ sucPredℤ (pos m + neg m) ⟩
+      sucℤ (predℤ (pos m + neg m)) ≡⟨ refl ⟩
+      sucℤ (pos m + neg (suc m)) ≡⟨ cong sucℤ $ ℤ+-comm (pos m) (neg (suc m)) ⟩
+      sucℤ (neg (suc m) + pos m) ≡⟨ cong (sucℤ ∘ (neg (suc m) +_) ∘ ℤ.pos) $ m≡m*1 m ⟩
+      sucℤ (neg (suc m) + pos (m * 1)) ∎
+    )
+  
+  ℤ*-suc (neg (suc m)) (neg (suc (suc n))) = cong sucℤ $ sym
+    ( sucℤ (predℤ (neg m) + pos (n + m * suc (suc n))) ≡⟨ cong sucℤ $ ℤ+-comm (predℤ (neg m)) (pos (n + m * suc (suc n))) ⟩
+      sucℤ (pos (n + m * suc (suc n)) + predℤ (neg m)) ≡⟨ cong sucℤ $ ℤ+-pred (pos (n + m * suc (suc n))) (neg m) ⟩
+      sucℤ (predℤ (pos (n + m * suc (suc n)) + neg m)) ≡⟨ sucPredℤ _ ⟩
+      pos (n + m * suc (suc n)) + neg m ≡⟨ cong ((_+ neg m) ∘ ℤ.pos ∘ (n +_)) $ *-suc m (suc n) ⟩
+      pos (n + (m + m * suc n)) + neg m ≡⟨ cong ((_+ neg m) ∘ ℤ.pos) $ +-assoc n m (m * suc n) ⟩
+      pos (n + m + m * suc n) + neg m ≡⟨ cong ((_+ neg m) ∘ ℤ.pos ∘ (_+ m * suc n)) $ +-comm n m ⟩
+      pos (m + n + m * suc n) + neg m ≡⟨ cong ((_+ neg m) ∘ ℤ.pos) $ sym $ +-assoc m n (m * suc n) ⟩
+      pos (m + (n + m * suc n)) + neg m ≡⟨ cong (_+ neg m) $ pos-distrib-+ m (n + m * suc n) ⟩
+      pos m + pos (n + m * suc n) + neg m ≡⟨ cong (_+ neg m) $ ℤ+-comm (pos m) (pos (n + m * suc n))  ⟩
+      pos (n + m * suc n) + pos m + neg m ≡⟨ sym $ ℤ+-assoc (pos (n + m * suc n)) (pos m) (neg m) ⟩
+      pos (n + m * suc n) + (pos m + neg m) ≡⟨ cong (pos (n + m * suc n) +_) $ ℤ-m+-m≡0 m ⟩
+      pos (n + m * suc n) + 0 ≡⟨ refl ⟩
+      pos (n + m * suc n) ∎
+    )
   ℤ*-suc (pos (suc m)) (pos (suc n)) = cong sucℤ
     ( pos (suc (n + m * suc (suc n))) ≡⟨ cong ℤ.pos $ lemma2 m n ⟩
       pos (suc m + (n + m * suc n)) ≡⟨ pos-distrib-+ (suc m) (n + m * suc n) ⟩
@@ -497,8 +575,6 @@ private
       neg (suc m + (n + m * suc n)) ≡⟨ neg-distrib-+ (suc m) (n + m * suc n) ⟩
       neg (suc m) + neg (n + m * suc n) ∎
     )
-  ℤ*-suc (pos (suc m)) (neg (suc (suc n))) = {!!}
-  ℤ*-suc (neg (suc m)) (neg (suc (suc n))) = {!!}
 
   -- induction on s?
   ℤ*+-right-distrib : (q r s : ℤ) → (q + r) * s ≡ q * s + r * s
