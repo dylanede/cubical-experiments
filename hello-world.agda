@@ -10,6 +10,7 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Nat renaming (_+_ to _+ℕ_; _*_ to _*ℕ_)
 open import Cubical.Data.Empty
 open import Cubical.Data.Unit
+open import Cubical.Data.Prod
 open import Agda.Primitive
 open import Function
 
@@ -712,16 +713,17 @@ private
       q * predℤ (neg n) + r * predℤ (neg n) ∎
     )
 
-
+--swapEq' : ∀ {ℓ} {A : Type ℓ} (a b : A) → Path (A × A) (a , b) (b , a)
+--swapEq' {ℓ} {A} a b i = transp (λ j → swapEq A A j) i0 {!(a , b)!} --transport (λ j → swapEq _ _ (i ∧ j)) (a , b)
 
 instance
   ℚ+ : Op+ ℚ ℚ (const₂ ℚ)
   _+_ ⦃ ℚ+ ⦄ q r = q plus r where
-    _plus_ : ℚ → ℚ → ℚ
-    con u a x plus con v b y = con (u * b + v * a) (a * b) (nonzero-prod a b x y)
-    con u a x plus path v b w c {p₁} {p₂} y i = path (u * b + v * a) (a * b) (u * c + w * a) (a * c)
-      {p = nonzero-prod a b x p₁}
-      {q = nonzero-prod a c x p₂}
+    plus_lemma1 : (u a v b w c : ℤ)
+      (x : ¬ a ≡ 0) (p₁ : ¬ b ≡ 0) (p₂ : ¬ c ≡ 0)
+      (y : v * c ≡ w * b)
+      → con (u * b + v * a) (a * b) (nonzero-prod a b x p₁) ≡ con (u * c + w * a) (a * c) (nonzero-prod a c x p₂)
+    plus_lemma1 u a v b w c x p₁ p₂ y = path _ _ _ _
       ( (u * b + v * a) * (a * c)         ≡⟨ ℤ*+-right-distrib (u * b) (v * a) (a * c) ⟩
         u * b * (a * c) + v * a * (a * c) ≡⟨ cong (_+ (v * a * (a * c))) $
           u * b * (a * c)                 ≡⟨ sym $ ℤ*-assoc u b (a * c) ⟩
@@ -748,21 +750,28 @@ instance
         u * c * (a * b) + w * a * (a * b) ≡⟨ sym $ ℤ*+-right-distrib (u * c) (w * a) (a * b) ⟩
         (u * c + w * a) * (a * b) ∎
       )
-      i
-    path v b w c {p₁} {p₂} x i plus con u a y = path (v * a + u * b) (b * a) (w * a + u * c) (c * a)
-      {p = nonzero-prod b a p₁ y}
-      {q = nonzero-prod c a p₂ y}
-      ( (v * a + u * b) * (c * a) ≡⟨ {!!} ⟩
-        v * a * (c * a) + u * b * (c * a) ≡⟨ {!!} ⟩
-        w * a * (b * a) + u * c * (b * a) ≡⟨ {!!} ⟩
-        (w * a + u * c) * (b * a) ∎
-      )
-      i
+    plus_lemma2 : (u a v b w c : ℤ)
+      (x : ¬ a ≡ 0) (p₁ : ¬ b ≡ 0) (p₂ : ¬ c ≡ 0)
+      (y : v * c ≡ w * b)
+      → con (v * a + u * b) (b * a) (nonzero-prod b a p₁ x) ≡ con (w * a + u * c) (c * a) (nonzero-prod c a p₂ x)
+    plus_lemma2 u a v b w c x p₁ p₂ y = 
+      con (v * a + u * b) (b * a) _ ≡⟨ cong (λ nom → con nom (b * a) _) $ ℤ+-comm (v * a) (u * b) ⟩
+      con (u * b + v * a) (b * a) _ ≡⟨ cong₂ (λ denom prf → con (u * b + v * a) denom prf) (ℤ*-comm b a) $ {!
+        cong {!(λ (l , pl) , (r , pr) → nonzero-prod l r pl pr)!} $
+        {!λ i → transport (λ j → swapEq _ _ (i ∧ j)) (((b , p₁) , (a , x)))!}!} ⟩
+      con (u * b + v * a) (a * b) (nonzero-prod a b x p₁) ≡⟨ plus_lemma1 u a v b w c x p₁ p₂ y ⟩
+      con (u * c + w * a) (a * c) (nonzero-prod a c x p₂) ≡⟨ cong₂ (λ denom prf → con (u * c + w * a) denom prf) (ℤ*-comm a c) $ {!!} ⟩
+      con (u * c + w * a) (c * a) (nonzero-prod c a p₂ x) ≡⟨ cong (λ nom → con nom (c * a) (nonzero-prod c a p₂ x)) $ ℤ+-comm (u * c) (w * a) ⟩
+      con (w * a + u * c) (c * a) _ ∎
+    _plus_ : ℚ → ℚ → ℚ
+    con u a x plus con v b y = con (u * b + v * a) (a * b) (nonzero-prod a b x y)
+    con u a x plus path v b w c {p₁} {p₂} y i = plus_lemma1 u a v b w c x p₁ p₂ y i
+    path v b w c {p₁} {p₂} y i plus con u a x = plus_lemma2 u a v b w c x p₁ p₂ y i
     path u a v b {p} {q} x i plus path u₁ a₁ v₁ b₁ {p₁} {q₁} x₁ j =
-      hcomp (λ k → \ { (i = i0) → {!!}
-                      ; (i = i1) → {!!}
-                      ; (j = i0) → {!!}
-                      ; (j = i1) → {!!} })
+      hcomp (λ k → \ { (i = i0) → plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁ (j ∧ k)
+                     ; (i = i1) → {!!}
+                     ; (j = i0) → plus_lemma2 u₁ a₁ u a v b p₁ p q x (i ∧ k)
+                     ; (j = i1) → {!!} })
             (con (u * a₁ + u₁ * a) (a * a₁) (nonzero-prod a a₁ p p₁))
     q@(path _ _ _ _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
