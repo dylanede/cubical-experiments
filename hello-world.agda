@@ -454,8 +454,8 @@ private
   ℤ*-assoc : (m n o : ℤ) → m * (n * o) ≡ m * n * o
   ℤ*-assoc m n (pos zero) = {!!}
   ℤ*-assoc m n (pos (suc o)) = {!!}
-  ℤ*-assoc m n (neg zero) = ?
-  ℤ*-assoc m n (neg (suc o)) = ?
+  ℤ*-assoc m n (neg zero) = {!!}
+  ℤ*-assoc m n (neg (suc o)) = {!!}
   ℤ*-assoc m n (posneg i) = {!!}
 
   neg-distrib-+ : (m n : ℕ) → neg (m + n) ≡ neg m + neg n
@@ -724,25 +724,25 @@ instance
       {q = nonzero-prod a c x p₂}
       ( (u * b + v * a) * (a * c)         ≡⟨ ℤ*+-right-distrib (u * b) (v * a) (a * c) ⟩
         u * b * (a * c) + v * a * (a * c) ≡⟨ cong (_+ (v * a * (a * c))) $
-          u * b * (a * c)   ≡⟨ sym $ ℤ*-assoc u b (a * c) ⟩
-          u * (b * (a * c)) ≡⟨ cong (u *_) $ ℤ*-comm b (a * c) ⟩
-          u * (a * c * b)   ≡⟨ cong ((u *_) ∘ (_* b)) $ ℤ*-comm a c ⟩
-          u * (c * a * b)   ≡⟨ cong (u *_) $ sym $ ℤ*-assoc c a b ⟩
-          u * (c * (a * b)) ≡⟨ ℤ*-assoc u c (a * b) ⟩
+          u * b * (a * c)                 ≡⟨ sym $ ℤ*-assoc u b (a * c) ⟩
+          u * (b * (a * c))               ≡⟨ cong (u *_) $ ℤ*-comm b (a * c) ⟩
+          u * (a * c * b)                 ≡⟨ cong ((u *_) ∘ (_* b)) $ ℤ*-comm a c ⟩
+          u * (c * a * b)                 ≡⟨ cong (u *_) $ sym $ ℤ*-assoc c a b ⟩
+          u * (c * (a * b))               ≡⟨ ℤ*-assoc u c (a * b) ⟩
           u * c * (a * b) ∎
         ⟩
         u * c * (a * b) + v * a * (a * c) ≡⟨ cong (u * c * (a * b) +_) $
-          v * a * (a * c)   ≡⟨ sym $ ℤ*-assoc v a (a * c) ⟩
-          v * (a * (a * c)) ≡⟨ cong (v *_) $ ℤ*-comm a (a * c) ⟩
-          v * (a * c * a)   ≡⟨ cong ((v *_) ∘ (_* a)) $ ℤ*-comm a c ⟩
-          v * (c * a * a)   ≡⟨ cong (v *_) $ sym $ ℤ*-assoc c a a ⟩
-          v * (c * (a * a)) ≡⟨ ℤ*-assoc v c (a * a) ⟩
-          v * c * (a * a)   ≡⟨ cong (_* (a * a)) y ⟩
-          w * b * (a * a)   ≡⟨ sym $ ℤ*-assoc w b (a * a) ⟩
-          w * (b * (a * a)) ≡⟨ cong (w *_) $ ℤ*-assoc b a a ⟩
-          w * (b * a * a)   ≡⟨ cong ((w *_) ∘ (_* a)) $ ℤ*-comm b a ⟩
-          w * (a * b * a)   ≡⟨ cong (w *_) $ ℤ*-comm (a * b) a ⟩
-          w * (a * (a * b)) ≡⟨ ℤ*-assoc w a (a * b) ⟩
+          v * a * (a * c)                 ≡⟨ sym $ ℤ*-assoc v a (a * c) ⟩
+          v * (a * (a * c))               ≡⟨ cong (v *_) $ ℤ*-comm a (a * c) ⟩
+          v * (a * c * a)                 ≡⟨ cong ((v *_) ∘ (_* a)) $ ℤ*-comm a c ⟩
+          v * (c * a * a)                 ≡⟨ cong (v *_) $ sym $ ℤ*-assoc c a a ⟩
+          v * (c * (a * a))               ≡⟨ ℤ*-assoc v c (a * a) ⟩
+          v * c * (a * a)                 ≡⟨ cong (_* (a * a)) y ⟩
+          w * b * (a * a)                 ≡⟨ sym $ ℤ*-assoc w b (a * a) ⟩
+          w * (b * (a * a))               ≡⟨ cong (w *_) $ ℤ*-assoc b a a ⟩
+          w * (b * a * a)                 ≡⟨ cong ((w *_) ∘ (_* a)) $ ℤ*-comm b a ⟩
+          w * (a * b * a)                 ≡⟨ cong (w *_) $ ℤ*-comm (a * b) a ⟩
+          w * (a * (a * b))               ≡⟨ ℤ*-assoc w a (a * b) ⟩
           w * a * (a * b) ∎
         ⟩
         u * c * (a * b) + w * a * (a * b) ≡⟨ sym $ ℤ*+-right-distrib (u * c) (w * a) (a * b) ⟩
@@ -758,7 +758,12 @@ instance
         (w * a + u * c) * (b * a) ∎
       )
       i
-    path u a v b x i plus path u₁ a₁ v₁ b₁ x₁ i₁ = {!!}
+    path u a v b {p} {q} x i plus path u₁ a₁ v₁ b₁ {p₁} {q₁} x₁ j =
+      hcomp (λ k → \ { (i = i0) → {!!}
+                      ; (i = i1) → {!!}
+                      ; (j = i0) → {!!}
+                      ; (j = i1) → {!!} })
+            (con (u * a₁ + u₁ * a) (a * a₁) (nonzero-prod a a₁ p p₁))
     q@(path _ _ _ _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     trunc q q₁ x y i i₁ plus r = trunc (q plus r) (q₁ plus r) (cong (_plus r) x) (cong (_plus r) y) i i₁
