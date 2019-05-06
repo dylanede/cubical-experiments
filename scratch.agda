@@ -1,6 +1,7 @@
 {-# OPTIONS --cubical --safe --exact-split --without-K #-}
 
-module hello-world where
+-- this depends mainly on agda/cubical, but also uses the standard library for `Function`
+module scratch where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
@@ -767,7 +768,7 @@ instance
     con u a x plus con v b y = con (u * b + v * a) (a * b) (nonzero-prod a b x y)
     con u a x plus path v b w c {p₁} {p₂} y i = plus_lemma1 u a v b w c x p₁ p₂ y i
     path v b w c {p₁} {p₂} y i plus con u a x = plus_lemma2 u a v b w c x p₁ p₂ y i
-    path u a v b {p} {q} x i plus path u₁ a₁ v₁ b₁ {p₁} {q₁} x₁ j = ?
+    path u a v b {p} {q} x i plus path u₁ a₁ v₁ b₁ {p₁} {q₁} x₁ j = {!!}
       -- attempts below:
       {-
       hcomp (λ k → \ { (i = i0) → plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁ (j ∧ k)
