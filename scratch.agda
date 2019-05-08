@@ -5,6 +5,7 @@ module scratch where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.HLevels
 open import Cubical.Relation.Nullary
 open import Cubical.HITs.HitInt renaming (abs to absℤ ; Sign to Sign'; sign to sign')
 open import Cubical.HITs.Rational
@@ -720,80 +721,61 @@ lemma-ℤ*-assoc i m n =
 instance
   ℚ+ : Op+ ℚ ℚ (const₂ ℚ)
   _+_ ⦃ ℚ+ ⦄ q r = q plus r where
-    plus_lemma1 : (u a v b w c : ℤ)
+    plus-lemma1 : (u a v b w c : ℤ)
       (x : ¬ a ≡ 0) (p₁ : ¬ b ≡ 0) (p₂ : ¬ c ≡ 0)
       (y : v * c ≡ w * b)
       → con (u * b + v * a) (a * b) (nonzero-prod a b x p₁) ≡ con (u * c + w * a) (a * c) (nonzero-prod a c x p₂)
-    plus_lemma1 u a v b w c x p₁ p₂ y = path _ _ _ _
-      ( (u * b + v * a) * (a * c)         ≡⟨ ℤ*+-right-distrib (u * b) (v * a) (a * c) ⟩
-        u * b * (a * c) + v * a * (a * c) ≡⟨ cong (_+ (v * a * (a * c))) $
-          u * b * (a * c)                   ≡⟨ sym $ ℤ*-assoc u b (a * c) ⟩
-          u * (b * (a * c))                 ≡⟨ cong (u *_) $ ℤ*-comm b (a * c) ⟩
-          u * (a * c * b)                   ≡⟨ cong ((u *_) ∘ (_* b)) $ ℤ*-comm a c ⟩
-          u * (c * a * b)                   ≡⟨ cong (u *_) $ sym $ ℤ*-assoc c a b ⟩
-          u * (c * (a * b))                 ≡⟨ ℤ*-assoc u c (a * b) ⟩
-          u * c * (a * b)                   ∎
-        ⟩
-        u * c * (a * b) + v * a * (a * c) ≡⟨ cong (u * c * (a * b) +_) $
-          v * a * (a * c)                   ≡⟨ sym $ ℤ*-assoc v a (a * c) ⟩
-          v * (a * (a * c))                 ≡⟨ cong (v *_) $ ℤ*-comm a (a * c) ⟩
-          v * (a * c * a)                   ≡⟨ cong ((v *_) ∘ (_* a)) $ ℤ*-comm a c ⟩
-          v * (c * a * a)                   ≡⟨ cong (v *_) $ sym $ ℤ*-assoc c a a ⟩
-          v * (c * (a * a))                 ≡⟨ ℤ*-assoc v c (a * a) ⟩
-          v * c * (a * a)                   ≡⟨ cong (_* (a * a)) y ⟩
-          w * b * (a * a)                   ≡⟨ sym $ ℤ*-assoc w b (a * a) ⟩
-          w * (b * (a * a))                 ≡⟨ cong (w *_) $ ℤ*-assoc b a a ⟩
-          w * (b * a * a)                   ≡⟨ cong ((w *_) ∘ (_* a)) $ ℤ*-comm b a ⟩
-          w * (a * b * a)                   ≡⟨ cong (w *_) $ ℤ*-comm (a * b) a ⟩
-          w * (a * (a * b))                 ≡⟨ ℤ*-assoc w a (a * b) ⟩
-          w * a * (a * b)                   ∎
-        ⟩
-        u * c * (a * b) + w * a * (a * b) ≡⟨ sym $ ℤ*+-right-distrib (u * c) (w * a) (a * b) ⟩
-        (u * c + w * a) * (a * b)         ∎
-      )
+    plus-lemma1 u a v b w c x p₁ p₂ y = path _ _ _ _ $
+      (u * b + v * a) * (a * c)         ≡⟨ ℤ*+-right-distrib (u * b) (v * a) (a * c) ⟩
+      u * b * (a * c) + v * a * (a * c) ≡⟨ cong (_+ (v * a * (a * c))) $
+        u * b * (a * c)                   ≡⟨ sym $ ℤ*-assoc u b (a * c) ⟩
+        u * (b * (a * c))                 ≡⟨ cong (u *_) $ ℤ*-comm b (a * c) ⟩
+        u * (a * c * b)                   ≡⟨ cong ((u *_) ∘ (_* b)) $ ℤ*-comm a c ⟩
+        u * (c * a * b)                   ≡⟨ cong (u *_) $ sym $ ℤ*-assoc c a b ⟩
+        u * (c * (a * b))                 ≡⟨ ℤ*-assoc u c (a * b) ⟩
+        u * c * (a * b)                   ∎
+      ⟩
+      u * c * (a * b) + v * a * (a * c) ≡⟨ cong (u * c * (a * b) +_) $
+        v * a * (a * c)                   ≡⟨ sym $ ℤ*-assoc v a (a * c) ⟩
+        v * (a * (a * c))                 ≡⟨ cong (v *_) $ ℤ*-comm a (a * c) ⟩
+        v * (a * c * a)                   ≡⟨ cong ((v *_) ∘ (_* a)) $ ℤ*-comm a c ⟩
+        v * (c * a * a)                   ≡⟨ cong (v *_) $ sym $ ℤ*-assoc c a a ⟩
+        v * (c * (a * a))                 ≡⟨ ℤ*-assoc v c (a * a) ⟩
+        v * c * (a * a)                   ≡⟨ cong (_* (a * a)) y ⟩
+        w * b * (a * a)                   ≡⟨ sym $ ℤ*-assoc w b (a * a) ⟩
+        w * (b * (a * a))                 ≡⟨ cong (w *_) $ ℤ*-assoc b a a ⟩
+        w * (b * a * a)                   ≡⟨ cong ((w *_) ∘ (_* a)) $ ℤ*-comm b a ⟩
+        w * (a * b * a)                   ≡⟨ cong (w *_) $ ℤ*-comm (a * b) a ⟩
+        w * (a * (a * b))                 ≡⟨ ℤ*-assoc w a (a * b) ⟩
+        w * a * (a * b)                   ∎
+      ⟩
+      u * c * (a * b) + w * a * (a * b) ≡⟨ sym $ ℤ*+-right-distrib (u * c) (w * a) (a * b) ⟩
+      (u * c + w * a) * (a * b)         ∎
     
-    plus_lemma2 : (u a v b w c : ℤ)
+    plus-lemma2 : (u a v b w c : ℤ)
       (x : ¬ a ≡ 0) (p₁ : ¬ b ≡ 0) (p₂ : ¬ c ≡ 0)
       (y : v * c ≡ w * b)
       → con (v * a + u * b) (b * a) (nonzero-prod b a p₁ x) ≡ con (w * a + u * c) (c * a) (nonzero-prod c a p₂ x)
-    plus_lemma2 u a v b w c x p₁ p₂ y = -- trying to reuse plus_lemma1 with this proof
+    plus-lemma2 u a v b w c x p₁ p₂ y = -- trying to reuse plus_lemma1 with this proof
       con (v * a + u * b) (b * a) _ ≡⟨ cong (λ nom → con nom (b * a) _) $ ℤ+-comm (v * a) (u * b) ⟩
       con (u * b + v * a) (b * a) _ ≡⟨ cong₂ (λ denom prf → con (u * b + v * a) denom prf) (ℤ*-comm b a) $ {!!} ⟩ -- TODO: not sure if this is the right approach
-      con (u * b + v * a) (a * b) (nonzero-prod a b x p₁) ≡⟨ plus_lemma1 u a v b w c x p₁ p₂ y ⟩
+      con (u * b + v * a) (a * b) (nonzero-prod a b x p₁) ≡⟨ plus-lemma1 u a v b w c x p₁ p₂ y ⟩
       con (u * c + w * a) (a * c) (nonzero-prod a c x p₂) ≡⟨ cong₂ (λ denom prf → con (u * c + w * a) denom prf) (ℤ*-comm a c) $ {!!} ⟩ -- TODO: ditto
       con (u * c + w * a) (c * a) (nonzero-prod c a p₂ x) ≡⟨ cong (λ nom → con nom (c * a) (nonzero-prod c a p₂ x)) $ ℤ+-comm (u * c) (w * a) ⟩
       con (w * a + u * c) (c * a) _ ∎
+      
     
     _plus_ : ℚ → ℚ → ℚ
     con u a x plus con v b y = con (u * b + v * a) (a * b) (nonzero-prod a b x y)
-    con u a x plus path v b w c {p₁} {p₂} y i = plus_lemma1 u a v b w c x p₁ p₂ y i
-    path v b w c {p₁} {p₂} y i plus con u a x = plus_lemma2 u a v b w c x p₁ p₂ y i
-    path u a v b {p} {q} x i plus path u₁ a₁ v₁ b₁ {p₁} {q₁} x₁ j = {!!}
-      -- attempts below:
-      {-
-      hcomp (λ k → \ { (i = i0) → plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁ (j ∧ k)
-                     ; (i = i1) → plus_lemma1 v b u₁ a₁ v₁ b₁ q p₁ q₁ x₁ (j ∧ k)
-                     ; (j = i0) → plus_lemma2 u₁ a₁ u a v b p₁ p q x i
-                     ; (j = i1) → doubleCompPath-filler ({!plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁!}) (plus_lemma2 v₁ b₁ u a v b q₁ p q x) {!!} i (~ k) --plus_lemma2 v₁ b₁ u a v b q₁ p q x {!k!}
-                     })
-            (plus_lemma2 u₁ a₁ u a v b p₁ p q x i)
-      -}
-      
-      {-
-      doubleCompPath-filler
-        (sym $ plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁)
-        (plus_lemma2 u₁ a₁ u a v b p₁ p q x)
-        (plus_lemma1 v b u₁ a₁ v₁ b₁ q p₁ q₁ x₁)
-      -}
-      
-      {-
-      hcomp (λ k → \ { (i = i0) → plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁ (j ∧ k)
-                     ; (i = i1) → {!compPath-filler (plus_lemma2 u₁ a₁ u a v b p₁ p q x) (plus_lemma1 v b u₁ a₁ v₁ b₁ q p₁ q₁ x₁) j k!}
-                     ; (j = i0) → plus_lemma2 u₁ a₁ u a v b p₁ p q x (i ∧ k)
-                     ; (j = i1) → compPath-filler (plus_lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁) (plus_lemma2 v₁ b₁ u a v b q₁ p q x) i k
-                     })
-            (con (u * a₁ + u₁ * a) (a * a₁) (nonzero-prod a a₁ p p₁))
-      -}
+    con u a x plus path v b w c {p₁} {p₂} y i = plus-lemma1 u a v b w c x p₁ p₂ y i
+    path v b w c {p₁} {p₂} y i plus con u a x = plus-lemma2 u a v b w c x p₁ p₂ y i
+    path u a v b {p} {q} x i plus path u₁ a₁ v₁ b₁ {p₁} {q₁} x₁ j =
+      isSet→isSet' trunc
+        (plus-lemma1 u a u₁ a₁ v₁ b₁ p p₁ q₁ x₁)
+        (plus-lemma1 v b u₁ a₁ v₁ b₁ q p₁ q₁ x₁)
+        (plus-lemma2 u₁ a₁ u a v b p₁ p q x)
+        (plus-lemma2 v₁ b₁ u a v b q₁ p q x)
+        i j
     q@(path _ _ _ _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     q@(con _ _ _) plus trunc r r₁ x y i i₁ = trunc (q plus r) (q plus r₁) (cong (q plus_) x) (cong (q plus_) y) i i₁
     trunc q q₁ x y i i₁ plus r = trunc (q plus r) (q₁ plus r) (cong (_plus r) x) (cong (_plus r) y) i i₁
