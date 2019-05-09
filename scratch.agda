@@ -808,8 +808,11 @@ instance
     negative : ℚ → ℚ
     negative (con u a x) = con (- u) a x
     negative (path u a v b {p} {q} x i) = path (- u) a (- v) b {p = p} {q = q}
-      ((sym $ neg-assoc* {a = u} {b = b}) ∙ cong -_ x ∙ neg-assoc* {a = v} {b = a})
-      i
+      ( - u * b ≡⟨ sym $ neg-assoc* {a = u} {b = b} ⟩
+        - (u * b) ≡⟨ cong -_ x ⟩
+        - (v * a) ≡⟨ neg-assoc* {a = v} {b = a} ⟩
+        - v * a ∎
+      ) i
     negative (trunc q q₁ x y i i₁) = trunc (negative q) (negative q₁) (cong negative x) (cong negative y) i i₁
 
 instance
